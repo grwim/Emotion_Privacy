@@ -51,7 +51,21 @@ dictionary_hit_count_TOTAL = {'anger': 0,
                                     'sadness': 0,
                                     'surprise': 0}
 
-# DONT FORTGET ABOUT 'none
+count_emotional_CORRECT = {'anger': 0,
+                                    'disgust': 0,
+                                    'fear': 0,
+                                    'joy': 0,
+                                    'love': 0,
+                                    'sadness': 0,
+                                    'surprise': 0}
+
+count_tweets_per_emotion = {'anger': 0,
+                                    'disgust': 0,
+                                    'fear': 0,
+                                    'joy': 0,
+                                    'love': 0,
+                                    'sadness': 0,
+                                    'surprise': 0}
 
 # load in each dictionary into a list
 
@@ -63,9 +77,7 @@ for x in range(0, len(tweets_legacy)):
     tweet = tweets_legacy[x]
     tweet = word_tokenize(tweet)
 
-
     # reintilize dict hit counts
-
     dictionary_hit_count = {'anger': 0,
                                         'disgust': 0,
                                         'fear': 0,
@@ -122,8 +134,9 @@ for x in range(0, len(tweets_legacy)):
 
 # number tweets with 1 dict hit, 2 seperate dict hits, 3, etc.
 
+total_tweet_count = 0
 for emotion in emotion_list:
-    tweet_count = 0
+    emotion_tweet_count = 0
     print
     print
     print
@@ -131,7 +144,12 @@ for emotion in emotion_list:
     print emotion
     for processed_tweet in all_processed_tweets:
         if emotion == processed_tweet[3]: # print all tweets that belong to that emotion
-            tweet_count = tweet_count + 1
+            emotion_tweet_count = emotion_tweet_count + 1
+            total_tweet_count = total_tweet_count + 1
+
+            # processed_tweet[2] != 'none' & processed_tweet[3] != 'none'
+            if  ((processed_tweet[2]  != 'none' ) & (processed_tweet[3] != 'none')):
+                count_emotional_CORRECT[emotion] = count_emotional_CORRECT[emotion] + 1
 
             if processed_tweet[2] == processed_tweet[3]: # if true positive
                 count_TP[emotion] = count_TP[emotion] + 1
@@ -153,23 +171,33 @@ for emotion in emotion_list:
                     print item,
             print
             print
+    count_tweets_per_emotion[emotion] = emotion_tweet_count
 
     # print total tweets for that emotion
-    print 'Total ', emotion, ' tweets: ', tweet_count
+    print 'Total ', emotion, ' tweets: ', count_tweets_per_emotion[emotion]
     print 'True Positives from max dict hit method: ', count_TP[emotion]
 
 
 # print none
-tweet_count = 0
 print
 print
 print 'none'
+none_tweet_count = 0
+count_none_TP = 0
+count_none_FP = 0
+count_none_FN = 0
+
 for processed_tweet in all_processed_tweets:
         if 'none' == processed_tweet[3]: # print all tweets that belong to that emotion
-            tweet_count = tweet_count + 1
+            total_tweet_count = total_tweet_count + 1
+            none_tweet_count = none_tweet_count + 1
 
             if processed_tweet[2] == processed_tweet[3]: # if true positive
-                count_TP[emotion] = count_TP[emotion] + 1
+                count_none_TP = count_none_TP + 1
+            if ((processed_tweet[2] == 'none') & (processed_tweet[3] != 'none')): # if true positive
+                count_none_FP = count_none_FP + 1
+            if ((processed_tweet[2] != 'none') & (processed_tweet[3] == 'none')): # if true positive
+                count_none_FN = count_none_FN + 1
 
             for item in processed_tweet:
                 if isinstance(item, list):
@@ -181,39 +209,32 @@ for processed_tweet in all_processed_tweets:
             print
             print
 
-print 'Total none tweets: ', tweet_count
-print 'True Positives from max dict hit method: ', count_TP[emotion]
+print 'Total none tweets: ', none_tweet_count
+print 'TP [Correctly labelled as none]: ', count_none_TP
+print 'FP [Ascribed label is none and the real label is emotional]: ', count_none_FP
+print 'FN [Ascribed label is emotional and the real label is none]:', count_none_FN
 print
-print
-
-# TO DO NEXT
 
 # get total dictionary hits for each emotion
 # and average emotional hits per dictionary
 print '----- Macro Data -----'
-print 'average dictionary hits for each emotion using ', tweet_count, ' tweets: '
+print 'average dictionary hits for each emotion using ', total_tweet_count, ' tweets: '
 for emotion in emotion_list:
-    print emotion, ' dictionary hits: ', (dictionary_hit_count_TOTAL[emotion] / float(tweet_count))
+    print emotion, ' dictionary hits: ', (dictionary_hit_count_TOTAL[emotion] / float(count_tweets_per_emotion[emotion]))
 
 
 # (break out: all, TP, FP ) across each emotion
-# add functionality to print only correctly labelled, [TP]
-# only ones that arent correct (ascribed the current emotion as label, but was wrong) [FP] --> (bad synonyms in dictionary)
-# and ones that were labeled as 'none' [FN]   --> (need expansion of dictonary for that emotion)
 for emotion in emotion_list:
     print
-    print emotion
-    print 'TP: ', count_TP[emotion]
-    print 'FP: ', count_FP[emotion]
-    print 'FN: ', count_FN[emotion]
+    print emotion, ': ', count_tweets_per_emotion[emotion]
+    print 'Correctly labeled emotion: ', count_TP[emotion]
+    print 'TP [Correctly labelled as emotional]: ', count_emotional_CORRECT[emotion]
+    print 'FP [Ascribed label is emotional and the real label is none]: ', count_FP[emotion]
+    print 'FN [Ascribed label is none and the real label is emotional]: ', count_FN[emotion]
 
+print
+print 'Total none tweets: ', none_tweet_count
+print 'TP [Correctly labelled as none]: ', count_none_TP
+print 'FP [Ascribed label is none and the real label is emotional]: ', count_none_FP
+print 'FN [Ascribed label is emotional and the real label is none]:', count_none_FN
 
-
-# then, for each label (7 emotions, 1 non emotion )
-
-    # organize tweets by actual labels
-
-    # print tweets with that label, hit count, and emotion prediction off of dict hit count
-
-# at end,
-# columns for meta information (column for each emotion )
